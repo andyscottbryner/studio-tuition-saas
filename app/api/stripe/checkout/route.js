@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server';
-import { stripe } from '../../../../lib/stripe';
+import { getStripe } from '../../../../lib/stripe';
 import { supabaseForToken } from '../../../../lib/supabaseForToken';
 
 export async function POST(req) {
+  const stripe = getStripe();
   const authHeader = req.headers.get('authorization') || '';
   const token = authHeader.replace('Bearer ', '');
   if (!token) return NextResponse.json({ error: 'Not authenticated.' }, { status: 401 });
@@ -13,7 +14,6 @@ export async function POST(req) {
   const { data: { user }, error: userError } = await db.auth.getUser();
   if (userError || !user) return NextResponse.json({ error: 'Not authenticated.' }, { status: 401 });
 
-  // RLS ensures this only returns a row if the caller actually owns it.
   const { data: gym, error: gymError } = await db.from('gyms').select('*').eq('id', gymId).single();
   if (gymError || !gym) return NextResponse.json({ error: 'Gym not found.' }, { status: 404 });
 

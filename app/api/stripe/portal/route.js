@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server';
-import { stripe } from '../../../../lib/stripe';
+import { getStripe } from '../../../../lib/stripe';
 import { supabaseForToken } from '../../../../lib/supabaseForToken';
 
 export async function POST(req) {
+  const stripe = getStripe();
   const authHeader = req.headers.get('authorization') || '';
   const token = authHeader.replace('Bearer ', '');
   if (!token) return NextResponse.json({ error: 'Not authenticated.' }, { status: 401 });

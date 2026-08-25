@@ -1,10 +1,11 @@
 import { NextResponse } from 'next/server';
-import { stripe } from '../../../../lib/stripe';
-import { supabaseAdmin } from '../../../../lib/supabaseAdmin';
+import { getStripe } from '../../../../lib/stripe';
+import { getSupabaseAdmin } from '../../../../lib/supabaseAdmin';
 
-// Stripe needs the raw request body to verify the signature — do not
-// parse it as JSON before this point.
 export async function POST(req) {
+  const stripe = getStripe();
+  const supabaseAdmin = getSupabaseAdmin();
+
   const rawBody = await req.text();
   const signature = req.headers.get('stripe-signature');
 
@@ -36,7 +37,7 @@ export async function POST(req) {
     case 'customer.subscription.updated':
     case 'customer.subscription.deleted': {
       const subscription = event.data.object;
-      const status = subscription.status; // active | trialing | past_due | canceled | unpaid ...
+      const status = subscription.status;
       await supabaseAdmin
         .from('gyms')
         .update({ subscription_status: status })
@@ -45,7 +46,6 @@ export async function POST(req) {
     }
 
     default:
-      // Ignore other event types.
       break;
   }
 
