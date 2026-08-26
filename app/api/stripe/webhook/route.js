@@ -22,18 +22,24 @@ export async function POST(req) {
       const session = event.data.object;
       const gymId = session.client_reference_id || session.metadata?.gym_id;
       if (gymId) {
+        let status = 'active';
+        if (session.subscription) {
+          const sub = await stripe.subscriptions.retrieve(session.subscription);
+          status = sub.status;
+        }
         await supabaseAdmin
           .from('gyms')
           .update({
             stripe_customer_id: session.customer,
             stripe_subscription_id: session.subscription,
-            subscription_status: 'active',
+            subscription_status: status,
           })
           .eq('id', gymId);
       }
       break;
     }
 
+    case 'customer.subscription.created':
     case 'customer.subscription.updated':
     case 'customer.subscription.deleted': {
       const subscription = event.data.object;
