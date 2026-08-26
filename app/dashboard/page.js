@@ -1,99 +1,130 @@
 'use client';
 
-import { useGym } from '../../lib/GymContext';
-import { computeStudent, grandTotals, fmt, NUM_STUDENTS, SLOTS_PER_STUDENT } from '../../lib/calc';
+import { useState } from 'react';
+import { useGym } from '../../../lib/GymContext';
+import { computeStudent, fmt, NUM_STUDENTS } from '../../../lib/calc';
 
-export default function CalculatorPage() {
-  const { config, students, setStudents, resetStudents } = useGym();
+function studentClassSummary(rows) {
+  const names = rows.filter((r) => r.className).map((r) => r.className);
+  return names.length ? names.join(', ') : '—';
+}
 
-  function updateRow(studentIndex, rowIndex, field, value) {
-    setStudents((prev) => {
-      const next = prev.map((s) => ({ rows: s.rows.map((r) => ({ ...r })) }));
-      next[studentIndex].rows[rowIndex][field] = field === 'remaining' ? Number(value) : value;
-      return next;
-    });
+export default function InvoicePage() {
+  const { gym, config, students } = useGym();
+  const [addlFee, setAddlFee] = useState(0);
+  const [promo, setPromo] = useState(0);
+
+  const rows = [];
+  let subtotal = 0, regTotal = 0, recurringTotal = 0;
+  let anyStudent = false;
+
+  for (let s = 0; s < NUM_STUDENTS; s++) {
+    const calc = computeStudent(config, students, s);
+    if (!calc.active) continue;
+    anyStudent = true;
+    const proratedNoReg = calc.firstMonthTotal - calc.regFee * calc.sib;
+    subtotal += proratedNoReg;
+    regTotal += calc.regFee;
+    recurringTotal += calc.recurring;
+    rows.push({ index: s, summary: studentClassSummary(calc.rows), prorated: proratedNoReg, recurring: calc.recurring });
   }
 
-  function resetAll() {
-    resetStudents();
-  }
-
-  const totals = grandTotals(config, students);
+  const balance = subtotal + regTotal + Number(addlFee || 0) - Number(promo || 0);
 
   return (
     <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14, flexWrap: 'wrap', gap: 10 }}>
-        <div style={{ fontSize: 13, color: 'var(--ink-soft)' }}>
-          Quoting a new family? <strong>Reset</strong> clears every student back to default.
-        </div>
-        <button className="btn btn-danger" onClick={resetAll}>↺ Reset All</button>
+      <div className="card no-print" style={{ display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
+        <button className="btn btn-amber" onClick={() => window.print()}>🖨 Print Invoice</button>
       </div>
 
-      {Array.from({ length: NUM_STUDENTS }).map((_, s) => {
-        const calc = computeStudent(config, students, s);
-        return (
-          <div className="student-card" key={s}>
-            <div className="student-head">
-              <h3>Student {s + 1}</h3>
-              <span style={{ fontSize: 12, color: '#C8CDD2', fontFamily: 'Roboto Mono, monospace' }}>
-                {s === 0 ? 'no sibling discount' : `sibling discount tier ${s}`}
-              </span>
-            </div>
-            <div style={{ padding: '14px 16px 6px' }}>
-              <table className="class-table">
-                <thead>
-                  <tr>
-                    <th>Class</th>
-                    <th>Tuition / Mo.</th>
-                    <th>Classes Left This Month</th>
-                    <th>Prorated Amount</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {Array.from({ length: SLOTS_PER_STUDENT }).map((_, r) => {
-                    const row = students[s].rows[r];
-                    const c = calc.rows[r];
-                    return (
-                      <tr key={r}>
-                        <td style={{ minWidth: 170 }}>
-                          <select value={row.className} onChange={(e) => updateRow(s, r, 'className', e.target.value)}>
-                            <option value="">None</option>
-                            {config.classes.filter((c) => c.name).map((c) => (
-                              <option key={c.name} value={c.name}>{c.name}</option>
-                            ))}
-                          </select>
-                        </td>
-                        <td className="money-cell num">{fmt(c.tuition)}</td>
-                        <td style={{ width: 150 }}>
-                          <select value={row.remaining} onChange={(e) => updateRow(s, r, 'remaining', e.target.value)}>
-                            {[0, 1, 2, 3, 4, 5].map((v) => <option key={v} value={v}>{v}</option>)}
-                          </select>
-                        </td>
-                        <td className="money-cell num">{fmt(c.prorated)}</td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-            <div className="totals-row">
-              <div className="t"><div className="lbl">Registration Fee</div><div className="val num">{fmt(calc.regFee)}</div></div>
-              <div className="t"><div className="lbl">Recurring Monthly</div><div className="val num">{fmt(calc.recurring)}</div></div>
-              <div className="t"><div className="lbl">First Month Total</div><div className="val num hi">{fmt(calc.firstMonthTotal)}</div></div>
+      <div className="card" style={{ padding: '32px 36px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: 20, marginBottom: 20 }}>
+          <div>
+            <h2 style={{ fontSize: 28, margin: '0 0 4px' }}>{gym?.name || 'Your Gym Name'}</h2>
+            <div style={{ fontSize: 13, color: 'var(--ink-soft)' }}>
+              {[gym?.phone, gym?.address, gym?.email].filter(Boolean).join(' · ') || 'Add your details in Customize'}
             </div>
           </div>
-        );
-      })}
+          <span className="mark" style={{ background: 'var(--amber)', color: 'var(--ink)', padding: '6px 14px', borderRadius: 3, fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 800, letterSpacing: '0.08em' }}>QUOTE</span>
+        </div>
 
-      <div className="grand-bar">
-        <div className="gcol">
-          <div className="glabel">Total First Month Due</div>
-          <div className="gval num">{fmt(totals.firstMonth)}</div>
+        <div className="grid grid-2 no-print" style={{ marginBottom: 12 }}>
+          <div>
+            <label className="field-label">Additional Fee</label>
+            <input type="number" min="0" value={addlFee} onChange={(e) => setAddlFee(e.target.value)} />
+          </div>
+          <div>
+            <label className="field-label">Other Discounts / Promos</label>
+            <input type="number" min="0" value={promo} onChange={(e) => setPromo(e.target.value)} />
+          </div>
         </div>
-        <div className="gcol">
-          <div className="glabel">Total Recurring Monthly</div>
-          <div className="gval num">{fmt(totals.recurring)}</div>
+
+        <h3 style={{ fontSize: 18, margin: '26px 0 4px', paddingBottom: 6, borderBottom: '1px solid var(--line)' }}>Current / First Month's Payment</h3>
+        <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: 6 }}>
+          <thead>
+            <tr>
+              <th style={{ textAlign: 'left', borderBottom: '2px solid var(--ink)', padding: '6px 8px', fontSize: 11 }}>Student</th>
+              <th style={{ textAlign: 'left', borderBottom: '2px solid var(--ink)', padding: '6px 8px', fontSize: 11 }}>Class(es)</th>
+              <th style={{ textAlign: 'right', borderBottom: '2px solid var(--ink)', padding: '6px 8px', fontSize: 11 }}>Prorated Tuition</th>
+            </tr>
+          </thead>
+          <tbody>
+            {!anyStudent && <tr><td colSpan={3} style={{ padding: 8, color: 'var(--ink-soft)' }}>No students selected yet — add classes on the Calculator tab.</td></tr>}
+            {rows.map((r) => (
+              <tr key={r.index}>
+                <td style={{ padding: '6px 8px', borderBottom: '1px solid var(--line)' }}>Student {r.index + 1}</td>
+                <td style={{ padding: '6px 8px', borderBottom: '1px solid var(--line)' }}>{r.summary}</td>
+                <td className="money-cell num" style={{ borderBottom: '1px solid var(--line)' }}>{fmt(r.prorated)}</td>
+              </tr>
+            ))}
+            <tr>
+              <td colSpan={2} style={{ padding: '6px 8px', fontWeight: 700, borderTop: '2px solid var(--ink)' }}>Subtotal</td>
+              <td className="money-cell num" style={{ fontWeight: 700, borderTop: '2px solid var(--ink)' }}>{fmt(subtotal)}</td>
+            </tr>
+            <tr>
+              <td colSpan={2} style={{ padding: '6px 8px' }}>Annual Registration Fee (all students)</td>
+              <td className="money-cell num">{fmt(regTotal)}</td>
+            </tr>
+            <tr>
+              <td colSpan={2} style={{ padding: '6px 8px' }}>Additional Fee</td>
+              <td className="money-cell num">{fmt(Number(addlFee || 0))}</td>
+            </tr>
+            <tr>
+              <td colSpan={2} style={{ padding: '6px 8px' }}>Other Discounts / Promos</td>
+              <td className="money-cell num">-{fmt(Number(promo || 0)).replace('-', '')}</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div style={{ background: 'var(--paper-dim)', border: '1px solid var(--line)', borderRadius: 6, padding: '14px 18px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 14 }}>
+          <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 700, fontSize: 19, textTransform: 'uppercase' }}>Balance Due Today</div>
+          <div className="num" style={{ fontSize: 26, fontWeight: 700, color: 'var(--teal-deep)' }}>{fmt(balance)}</div>
         </div>
+
+        <h3 style={{ fontSize: 18, margin: '26px 0 4px', paddingBottom: 6, borderBottom: '1px solid var(--line)' }}>Recurring / Typical Monthly Payment</h3>
+        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <thead>
+            <tr>
+              <th style={{ textAlign: 'left', borderBottom: '2px solid var(--ink)', padding: '6px 8px', fontSize: 11 }}>Student</th>
+              <th style={{ textAlign: 'left', borderBottom: '2px solid var(--ink)', padding: '6px 8px', fontSize: 11 }}>Class(es)</th>
+              <th style={{ textAlign: 'right', borderBottom: '2px solid var(--ink)', padding: '6px 8px', fontSize: 11 }}>Monthly Tuition</th>
+            </tr>
+          </thead>
+          <tbody>
+            {!anyStudent && <tr><td colSpan={3} style={{ padding: 8, color: 'var(--ink-soft)' }}>No students selected yet.</td></tr>}
+            {rows.map((r) => (
+              <tr key={r.index}>
+                <td style={{ padding: '6px 8px', borderBottom: '1px solid var(--line)' }}>Student {r.index + 1}</td>
+                <td style={{ padding: '6px 8px', borderBottom: '1px solid var(--line)' }}>{r.summary}</td>
+                <td className="money-cell num" style={{ borderBottom: '1px solid var(--line)' }}>{fmt(r.recurring)}</td>
+              </tr>
+            ))}
+            <tr>
+              <td colSpan={2} style={{ padding: '6px 8px', fontWeight: 700, borderTop: '2px solid var(--ink)' }}>Typical Monthly Tuition</td>
+              <td className="money-cell num" style={{ fontWeight: 700, borderTop: '2px solid var(--ink)' }}>{fmt(recurringTotal)}</td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </div>
   );
