@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { CreditCard, Settings2, ArrowLeft } from 'lucide-react';
 import { supabase } from '../../lib/supabaseClient';
 
 export default function BillingPage() {
@@ -25,6 +26,10 @@ export default function BillingPage() {
   }, [router]);
 
   async function callApi(path) {
+    if (!gym) {
+      setError('Still loading your gym info — try again in a moment.');
+      return;
+    }
     setBusy(true);
     setError('');
     const { data: { session } } = await supabase.auth.getSession();
@@ -47,29 +52,41 @@ export default function BillingPage() {
 
   if (loading) return <div className="app"><p style={{ padding: 40 }}>Loading…</p></div>;
 
+  if (!gym) {
+    return (
+      <div className="app">
+        <div className="center-form card">
+          <h2 style={{ marginBottom: 10 }}>Billing</h2>
+          <p style={{ fontSize: 14, color: 'var(--ink-soft)' }}>
+            We couldn't find a gym linked to your account. Try logging out and
+            signing up again, or contact support if this keeps happening.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   const active = gym && ['active', 'trialing'].includes(gym.subscription_status);
 
   return (
     <div className="app">
       <div className="center-form card">
-        <h2 style={{ marginBottom: 10 }}>Billing</h2>
-        {gym && (
-          <p style={{ marginBottom: 18 }}>
-            Status:{' '}
-            <span className={`status-pill ${active ? 'status-active' : 'status-inactive'}`}>
-              {gym.subscription_status}
-            </span>
-          </p>
-        )}
+        <h2 style={{ marginBottom: 10 }}>{active ? 'Billing' : 'Start Your Free Trial'}</h2>
+        <p style={{ marginBottom: 18 }}>
+          Status:{' '}
+          <span className={`status-pill ${active ? 'status-active' : 'status-inactive'}`}>
+            {gym.subscription_status}
+          </span>
+        </p>
         {error && <p style={{ color: 'var(--red)', fontSize: 13, marginBottom: 12 }}>{error}</p>}
 
         {!active && (
           <>
             <p style={{ fontSize: 14, color: 'var(--ink-soft)', marginBottom: 16 }}>
-              Subscribe to unlock the calculator, customize, and invoice tools for your gym.
+              Claim your 30-day free trial to unlock the calculator, customize, and invoice tools for your gym. No charge until the trial ends — cancel any time.
             </p>
             <button className="btn btn-amber" disabled={busy} onClick={() => callApi('/api/stripe/checkout')} style={{ width: '100%', justifyContent: 'center' }}>
-              {busy ? 'Redirecting…' : 'Subscribe'}
+              <CreditCard size={16} /> {busy ? 'Redirecting…' : 'Claim Free Trial'}
             </button>
           </>
         )}
@@ -80,10 +97,10 @@ export default function BillingPage() {
               Manage your payment method, invoices, or cancel any time.
             </p>
             <button className="btn btn-teal" disabled={busy} onClick={() => callApi('/api/stripe/portal')} style={{ width: '100%', justifyContent: 'center' }}>
-              {busy ? 'Redirecting…' : 'Manage Subscription'}
+              <Settings2 size={16} /> {busy ? 'Redirecting…' : 'Manage Subscription'}
             </button>
             <button className="btn btn-ghost" style={{ width: '100%', justifyContent: 'center', marginTop: 10 }} onClick={() => router.push('/dashboard')}>
-              Go to Calculator
+              <ArrowLeft size={16} /> Go to Calculator
             </button>
           </>
         )}
