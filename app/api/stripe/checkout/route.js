@@ -28,7 +28,7 @@ export async function POST(req) {
     success_url: `${siteUrl}/dashboard?checkout=success`,
     cancel_url: `${siteUrl}/billing?checkout=cancel`,
     metadata: { gym_id: gym.id },
-    subscription_data: { metadata: { gym_id: gym.id } },
+    subscription_data: { trial_period_days: 30, metadata: { gym_id: gym.id } },
   });
 
   return NextResponse.json({ url: session.url });
