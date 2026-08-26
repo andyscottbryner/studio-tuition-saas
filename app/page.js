@@ -198,6 +198,19 @@ export default function HomePage() {
             Discount rates shown are examples — you set your own multi-class, sibling, and registration fee rules in Customize.
           </p>
         </div>
+
+        <div style={{ borderTop: '1px solid var(--line)', marginTop: 56, paddingTop: 28, paddingBottom: 40, textAlign: 'center' }}>
+          <p style={{ fontSize: 14, color: 'var(--ink-soft)', margin: 0 }}>
+            Please contact us at{' '}
+            <a href="mailto:UtahValleyTumbling@gmail.com" style={{ color: 'var(--amber-deep)', fontWeight: 600 }}>
+              UtahValleyTumbling@gmail.com
+            </a>{' '}
+            for questions
+          </p>
+          <p style={{ fontSize: 13, color: 'var(--ink-soft)', marginTop: 6 }}>
+            Andy, owner
+          </p>
+        </div>
       </div>
     </div>
   );
