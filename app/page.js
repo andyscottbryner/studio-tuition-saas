@@ -125,11 +125,11 @@ export default function HomePage() {
             <div className="card-title">
               <h2 style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                 <Dumbbell size={20} style={{ color: 'var(--amber-deep)' }} />
-                Built for gyms
+                Built for gyms, clubs, and studios alike
               </h2>
             </div>
             <p style={{ color: 'var(--ink-soft)', fontSize: 14, lineHeight: 1.6 }}>
-              Designed around how gyms and studios actually quote and invoice
+              Gymnastics gyms, dance studios, cheer gyms, etc. Designed around how gyms and studios actually quote and invoice
               families — not a generic spreadsheet template.
             </p>
           </div>
