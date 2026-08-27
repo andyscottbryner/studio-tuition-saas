@@ -136,6 +136,18 @@ export default function HomePage() {
             Three real front-desk moments — this is exactly what the Calculator produces automatically.
           </p>
 
+          <div style={{ borderRadius: 8, overflow: 'hidden', border: '1px solid var(--line)', marginBottom: 32, background: '#000' }}>
+            <video
+              controls
+              preload="metadata"
+              poster="/demo-poster.jpg"
+              style={{ width: '100%', height: 'auto', display: 'block' }}
+            >
+              <source src="/demo.mp4" type="video/mp4" />
+              Your browser doesn't support embedded video. You can still see the examples below.
+            </video>
+          </div>
+
           <div className="grid grid-2">
             <div className="card">
               <div className="card-title"><h2 style={{ fontSize: 18 }}>Ava — joins mid-month</h2></div>
