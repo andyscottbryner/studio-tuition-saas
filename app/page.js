@@ -87,7 +87,7 @@ export default function HomePage() {
             <div className="card-title">
               <h2 style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                 <Users size={20} style={{ color: 'var(--amber-deep)' }} />
-                For your front desk - save time and eliminate erroers
+                For your front desk - save time & eliminate errors
               </h2>
             </div>
             <p style={{ color: 'var(--ink-soft)', fontSize: 14, lineHeight: 1.6 }}>
