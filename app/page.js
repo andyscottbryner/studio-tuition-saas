@@ -64,7 +64,12 @@ export default function HomePage() {
         <div className="hero" style={{ display: 'grid', gridTemplateColumns: '1.1fr 0.9fr', alignItems: 'center', gap: 32, textAlign: 'left', padding: '56px 0' }}>
           <div>
             <h1 style={{ fontSize: 44, textAlign: 'left', margin: 0 }}>Quote a family in seconds.</h1>
-            <p style={{ textAlign: 'left', margin: '14px 0 24px', maxWidth: 480 }}>
+            <div style={{ margin: '12px 0 14px' }}>
+              <span style={{ background: 'var(--amber)', color: 'var(--ink)', fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 800, fontSize: 14, letterSpacing: '0.03em', textTransform: 'uppercase', padding: '5px 12px', borderRadius: 4, display: 'inline-block' }}>
+                30-day free trial · $19/month after
+              </span>
+            </div>
+            <p style={{ textAlign: 'left', margin: '0 0 24px', maxWidth: 480 }}>
               Prorated tuition, multi-class and sibling discounts, printable invoices —
               built for gym and studio front desks. Set it up once, subscribe, and every
               location logs in to their own workspace.
